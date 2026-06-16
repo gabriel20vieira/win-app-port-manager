@@ -1,55 +1,56 @@
 # Port Manager
 
-Aplicação Windows (WPF, .NET 8) que mostra os portos abertos e os processos
-associados, e permite matar esses processos. Corre **sempre como administrador**
-(UAC pedido no arranque via manifest) para conseguir ler todos os PIDs e
-terminar processos de qualquer dono.
+A Windows desktop app (WPF, .NET 8) that lists open ports and their owning
+processes, and lets you kill those processes. It **always runs as administrator**
+(UAC is requested at startup via the manifest) so it can read every PID and
+terminate processes owned by any user.
 
-## Funcionalidades
+## Features
 
-- Lista portos **TCP em LISTEN** e **UDP** com o processo dono.
-- Colunas: Protocolo · Porto · Endereço local · Estado · PID · Nome · Caminho.
-- **Atualizar** manual + checkbox **Auto (5s)**.
-- **Filtro** de texto live (porto, PID, nome, caminho, endereço, protocolo).
-- **Matar processo** com diálogo de confirmação.
-- Lê os portos via P/Invoke `iphlpapi.dll`
-  (`GetExtendedTcpTable` / `GetExtendedUdpTable`) — PID por linha, sem parsing
-  de `netstat`.
+- Lists **TCP ports in LISTEN** state and **UDP** ports with the owning process.
+- Columns: Protocol · Port · Local address · State · PID · Name · Path.
+- Manual **Refresh** plus an **Auto (5s)** checkbox.
+- Live text **filter** (port, PID, name, path, address, protocol).
+- **Kill process** with a confirmation dialog.
+- Reads ports via P/Invoke into `iphlpapi.dll`
+  (`GetExtendedTcpTable` / `GetExtendedUdpTable`) — PID per row, no `netstat`
+  parsing.
 
-## Arquitetura
+## Architecture
 
-| Unidade | Faz |
-|---------|-----|
-| `Interop/NativeMethods` | P/Invoke das tabelas TCP/UDP com PID |
-| `Services/PortScanner` (`IPortScanner`) | Lê TCP LISTEN + UDP → `PortEntry` |
-| `Services/ProcessResolver` (`IProcessResolver`) | PID → nome + caminho, com cache por scan |
-| `Services/ProcessKiller` (`IProcessKiller`) | Mata PID, devolve ok/erro |
-| `Services/DialogService` (`IDialogService`) | Confirmar / info / erro |
-| `ViewModels/MainViewModel` | Lista, filtro, comandos, estado |
+| Unit | Responsibility |
+|------|----------------|
+| `Interop/NativeMethods` | P/Invoke for the TCP/UDP tables with owning PID |
+| `Services/PortScanner` (`IPortScanner`) | Reads TCP LISTEN + UDP → `PortEntry` |
+| `Services/ProcessResolver` (`IProcessResolver`) | PID → name + path, cached per scan |
+| `Services/ProcessKiller` (`IProcessKiller`) | Kills a PID, returns ok/error |
+| `Services/DialogService` (`IDialogService`) | Confirm / info / error prompts |
+| `ViewModels/MainViewModel` | List, filter, commands, state |
 | `MainWindow` | DataGrid + toolbar + status bar |
 
-As interfaces (`IPortScanner`, `IProcessKiller`, `IProcessResolver`,
-`IDialogService`) permitem testar o `MainViewModel` com fakes, sem tocar no
+The interfaces (`IPortScanner`, `IProcessKiller`, `IProcessResolver`,
+`IDialogService`) let `MainViewModel` be tested with fakes, without touching
 win32.
 
-## Correr o exe
+## Running the exe
 
-O `dist/PortManager.exe` é **self-contained** (~154 MB): traz o próprio runtime
-.NET 8, por isso **não precisa de nada instalado**. Copia para qualquer Windows
-x64 e corre — aceita o UAC.
+`dist/PortManager.exe` is **self-contained** (~154 MB): it bundles the .NET 8
+runtime, so it **needs nothing installed**. Copy it to any Windows x64 machine
+and run — accept the UAC prompt.
 
-> Só funciona em **Windows x64**. Ver secção *Linux?* abaixo.
+> Windows x64 only. See the *Linux?* section below.
 
-### (Opcional) build framework-dependent mais pequena
+### (Optional) smaller framework-dependent build
 
-Se preferes um exe minúsculo (~0.2 MB) à custa de exigir runtime instalado:
+If you prefer a tiny exe (~0.2 MB) at the cost of requiring the runtime to be
+installed:
 
 ```powershell
 dotnet publish src/PortManager/PortManager.csproj -c Release -r win-x64 `
   --self-contained false -p:PublishSingleFile=true -o dist
 ```
 
-Nesse caso a máquina precisa do **.NET 8 Desktop Runtime**:
+That build needs the **.NET 8 Desktop Runtime** on the machine:
 
 - **winget:** `winget install Microsoft.DotNet.DesktopRuntime.8`
 - **Chocolatey:** `choco install dotnet-8.0-desktopruntime`
@@ -57,28 +58,29 @@ Nesse caso a máquina precisa do **.NET 8 Desktop Runtime**:
 
 ## Linux?
 
-**Não.** A app é Windows-only por três razões de fundo:
+**No.** The app is Windows-only for three fundamental reasons:
 
-- **WPF** só corre em Windows (sem port para Linux).
-- Lê os portos via **`iphlpapi.dll`** (API exclusiva do Windows).
-- Elevação via manifest **`requireAdministrator`** é mecanismo Windows.
+- **WPF** runs on Windows only (no Linux port).
+- Ports are read via **`iphlpapi.dll`**, a Windows-exclusive API.
+- Elevation through the **`requireAdministrator`** manifest is a Windows
+  mechanism.
 
-Para Linux seria preciso reescrever: outra UI (ex. Avalonia) e outra fonte de
-dados (parsing de `/proc/net/tcp` + `/proc/net/udp`, ou `ss`/`lsof`). A camada
-de serviços/ViewModel (atrás de interfaces) reaproveitava-se; o `NativeMethods`
-e a UI não.
+A Linux version would require a rewrite: a different UI (e.g. Avalonia) and a
+different data source (parsing `/proc/net/tcp` + `/proc/net/udp`, or `ss`/`lsof`).
+The services/ViewModel layer (behind interfaces) would be reusable; the
+`NativeMethods` and UI would not.
 
-## Build & correr (a partir do código)
+## Build & run (from source)
 
 ```powershell
 dotnet build src/PortManager/PortManager.csproj -c Debug
 dotnet run --project src/PortManager/PortManager.csproj
 ```
 
-> Ao correr, o Windows pede elevação (UAC). Sem admin a app não arranca, por
-> design (manifest `requireAdministrator`).
+> On launch, Windows prompts for elevation (UAC). Without admin the app does not
+> start, by design (`requireAdministrator` manifest).
 
-## Testes
+## Tests
 
-A camada de serviços e o ViewModel são testáveis via as interfaces. Projeto de
-testes (xUnit) a adicionar em `tests/`.
+The services and the ViewModel are testable through their interfaces. An xUnit
+test project will live under `tests/`.
