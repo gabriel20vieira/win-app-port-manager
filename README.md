@@ -32,26 +32,41 @@ As interfaces (`IPortScanner`, `IProcessKiller`, `IProcessResolver`,
 `IDialogService`) permitem testar o `MainViewModel` com fakes, sem tocar no
 win32.
 
-## Pré-requisito: .NET 8 Desktop Runtime
+## Correr o exe
 
-O exe em `dist/PortManager.exe` é **framework-dependent** (pequeno, ~0.2 MB),
-por isso precisa do **.NET 8 Desktop Runtime** instalado na máquina que o corre.
+O `dist/PortManager.exe` é **self-contained** (~154 MB): traz o próprio runtime
+.NET 8, por isso **não precisa de nada instalado**. Copia para qualquer Windows
+x64 e corre — aceita o UAC.
 
-Instalar via **winget** (recomendado):
+> Só funciona em **Windows x64**. Ver secção *Linux?* abaixo.
+
+### (Opcional) build framework-dependent mais pequena
+
+Se preferes um exe minúsculo (~0.2 MB) à custa de exigir runtime instalado:
 
 ```powershell
-winget install Microsoft.DotNet.DesktopRuntime.8
+dotnet publish src/PortManager/PortManager.csproj -c Release -r win-x64 `
+  --self-contained false -p:PublishSingleFile=true -o dist
 ```
 
-Alternativas:
+Nesse caso a máquina precisa do **.NET 8 Desktop Runtime**:
 
-- **Download direto:** https://dotnet.microsoft.com/download/dotnet/8.0
-  → secção *Desktop Runtime* (`windowsdesktop-runtime-8.0.x-win-x64.exe`).
+- **winget:** `winget install Microsoft.DotNet.DesktopRuntime.8`
 - **Chocolatey:** `choco install dotnet-8.0-desktopruntime`
-- Se já tens o **.NET 8 SDK** instalado, o runtime já vem incluído — nada a fazer.
+- **Download:** https://dotnet.microsoft.com/download/dotnet/8.0 (*Desktop Runtime*)
 
-> Não precisas disto se usares uma build **self-contained** (`--self-contained
-> true`), mas essa fica ~150 MB.
+## Linux?
+
+**Não.** A app é Windows-only por três razões de fundo:
+
+- **WPF** só corre em Windows (sem port para Linux).
+- Lê os portos via **`iphlpapi.dll`** (API exclusiva do Windows).
+- Elevação via manifest **`requireAdministrator`** é mecanismo Windows.
+
+Para Linux seria preciso reescrever: outra UI (ex. Avalonia) e outra fonte de
+dados (parsing de `/proc/net/tcp` + `/proc/net/udp`, ou `ss`/`lsof`). A camada
+de serviços/ViewModel (atrás de interfaces) reaproveitava-se; o `NativeMethods`
+e a UI não.
 
 ## Build & correr (a partir do código)
 
