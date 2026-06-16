@@ -13,20 +13,20 @@ public sealed class ProcessKiller : IProcessKiller
             using var p = Process.GetProcessById(pid);
             p.Kill();
             p.WaitForExit(5000);
-            return new KillResult(true, $"Processo {pid} terminado.");
+            return new KillResult(true, $"Process {pid} terminated.");
         }
         catch (ArgumentException)
         {
             // Already gone.
-            return new KillResult(true, $"Processo {pid} já não existe.");
+            return new KillResult(true, $"Process {pid} no longer exists.");
         }
         catch (Win32Exception ex)
         {
-            return new KillResult(false, $"Acesso negado ao matar PID {pid}: {ex.Message}");
+            return new KillResult(false, $"Access denied killing PID {pid}: {ex.Message}");
         }
         catch (Exception ex)
         {
-            return new KillResult(false, $"Falha ao matar PID {pid}: {ex.Message}");
+            return new KillResult(false, $"Failed to kill PID {pid}: {ex.Message}");
         }
     }
 }

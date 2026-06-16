@@ -43,17 +43,17 @@ public sealed class ProcessResolver : IProcessResolver
             {
                 // Access denied to module path is common for protected/system
                 // processes even when elevated. Keep the name, skip the path.
-                path = "(sem acesso)";
+                path = "(access denied)";
             }
             return new ProcessInfo(name, path);
         }
         catch (ArgumentException)
         {
-            return new ProcessInfo("(processo terminado)", "");
+            return new ProcessInfo("(process exited)", "");
         }
         catch (Exception)
         {
-            return new ProcessInfo("(sem acesso)", "");
+            return new ProcessInfo("(access denied)", "");
         }
     }
 }

@@ -74,12 +74,12 @@ public sealed class MainViewModel : ViewModelBase
             _entries.Clear();
             foreach (var e in rows)
                 _entries.Add(e);
-            Status = $"{rows.Count} portos · atualizado {TimeOfDayNow()}";
+            Status = $"{rows.Count} ports · refreshed {TimeOfDayNow()}";
         }
         catch (Exception ex)
         {
-            Status = "Erro ao ler portos.";
-            _dialogs.Error("Erro", ex.Message);
+            Status = "Failed to read ports.";
+            _dialogs.Error("Error", ex.Message);
         }
     }
 
@@ -91,8 +91,8 @@ public sealed class MainViewModel : ViewModelBase
 
         string label = string.IsNullOrEmpty(target.ProcessName) ? "?" : target.ProcessName;
         bool ok = _dialogs.Confirm(
-            "Confirmar",
-            $"Matar PID {target.Pid} ({label})?\n\nPorto {target.ProtocolText} {target.Port}");
+            "Confirm",
+            $"Kill PID {target.Pid} ({label})?\n\nPort {target.ProtocolText} {target.Port}");
         if (!ok)
             return;
 
@@ -104,7 +104,7 @@ public sealed class MainViewModel : ViewModelBase
         }
         else
         {
-            _dialogs.Error("Falha", result.Message);
+            _dialogs.Error("Failed", result.Message);
         }
     }
 
