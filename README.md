@@ -32,7 +32,28 @@ As interfaces (`IPortScanner`, `IProcessKiller`, `IProcessResolver`,
 `IDialogService`) permitem testar o `MainViewModel` com fakes, sem tocar no
 win32.
 
-## Build & correr
+## Pré-requisito: .NET 8 Desktop Runtime
+
+O exe em `dist/PortManager.exe` é **framework-dependent** (pequeno, ~0.2 MB),
+por isso precisa do **.NET 8 Desktop Runtime** instalado na máquina que o corre.
+
+Instalar via **winget** (recomendado):
+
+```powershell
+winget install Microsoft.DotNet.DesktopRuntime.8
+```
+
+Alternativas:
+
+- **Download direto:** https://dotnet.microsoft.com/download/dotnet/8.0
+  → secção *Desktop Runtime* (`windowsdesktop-runtime-8.0.x-win-x64.exe`).
+- **Chocolatey:** `choco install dotnet-8.0-desktopruntime`
+- Se já tens o **.NET 8 SDK** instalado, o runtime já vem incluído — nada a fazer.
+
+> Não precisas disto se usares uma build **self-contained** (`--self-contained
+> true`), mas essa fica ~150 MB.
+
+## Build & correr (a partir do código)
 
 ```powershell
 dotnet build src/PortManager/PortManager.csproj -c Debug
