@@ -1,0 +1,56 @@
+<Window x:Class="PortManager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Port Manager (Administrador)" Height="600" Width="1000"
+        WindowStartupLocation="CenterScreen">
+    <DockPanel Margin="8">
+
+        <!-- Toolbar -->
+        <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0" Content="Atualizar" Padding="12,4"
+                    Command="{Binding RefreshCommand}" />
+
+            <CheckBox Grid.Column="1" Content="Auto (5s)" VerticalAlignment="Center"
+                      Margin="12,0,0,0" IsChecked="{Binding AutoRefresh}" />
+
+            <TextBox Grid.Column="2" Margin="12,0" VerticalContentAlignment="Center"
+                     Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"
+                     ToolTip="Filtrar por porto, PID, nome, caminho..." />
+
+            <Button Grid.Column="4" Content="Matar processo" Padding="12,4"
+                    Background="#E0E0E0"
+                    Command="{Binding KillCommand}" />
+        </Grid>
+
+        <!-- Status bar -->
+        <Border DockPanel.Dock="Bottom" Background="#F0F0F0" Padding="8,4" Margin="0,8,0,0">
+            <TextBlock Text="{Binding Status}" />
+        </Border>
+
+        <!-- Port table -->
+        <DataGrid ItemsSource="{Binding Entries}"
+                  SelectedItem="{Binding Selected, Mode=TwoWay}"
+                  AutoGenerateColumns="False" IsReadOnly="True"
+                  SelectionMode="Single" CanUserResizeRows="False"
+                  GridLinesVisibility="Horizontal" HeadersVisibility="Column"
+                  AlternatingRowBackground="#F7F7F7">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Proto" Binding="{Binding ProtocolText}" Width="60" />
+                <DataGridTextColumn Header="Porto" Binding="{Binding Port}" Width="70" />
+                <DataGridTextColumn Header="Endereço local" Binding="{Binding LocalAddress}" Width="130" />
+                <DataGridTextColumn Header="Estado" Binding="{Binding State}" Width="90" />
+                <DataGridTextColumn Header="PID" Binding="{Binding Pid}" Width="70" />
+                <DataGridTextColumn Header="Processo" Binding="{Binding ProcessName}" Width="160" />
+                <DataGridTextColumn Header="Caminho" Binding="{Binding ProcessPath}" Width="*" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</Window>
